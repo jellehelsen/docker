@@ -1,0 +1,74 @@
+"""
+    Copyright 2016 Impera
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+    Contact: bart@impera.io
+"""
+
+entity Service extends ip::services::Server:
+    """
+        A docker service
+    """
+end
+
+typedef container_state as string matching self == "running" or self == "stopped" or self == "latest" or self == "purged"
+
+entity Container:
+    """
+        A docker container deployed on a container service
+
+        :param name The name of the docker container
+        :param image The image to base this container on
+        :param detach Detach this container when started?
+        :param state The state of the container
+    """
+    string name
+    string image
+    bool detach
+    docker::container_state state
+end
+
+implement Container using std::none
+
+Service service [1] -- [0:] Container containers
+
+entity Port:
+    """
+        A portmapping between the container and the host
+    """
+    ip::ip host_ip = "0.0.0.0"
+    ip::port host_port
+    ip::port container_port
+end
+
+Container container [1] -- [0:] Port ports
+
+entity Volume:
+    """
+        A volume mounted from the host into the container
+    """
+    string host_path
+    string container_path
+    string options = "rw"
+end
+
+Container container [1] -- [0:] Volume volumes
+
+implementation docker for Service:
+    docker_pkg = std::Package(host=host, name="docker", state="installed")
+    std::Service(host=host, name="docker", state="running", onboot=true, requires=docker_pkg)
+end
+
+implement Service using docker
+
