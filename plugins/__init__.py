@@ -39,6 +39,13 @@ class ContainerHandler(ResourceHandler):
     def is_available(self, io):
         return True
 
+    def list_changes(self, resource: Container) -> dict:
+        """
+            List the changes that are required to the vm
+        """
+        current = self.check_resource(resource)
+        return self._diff(current, resource)
+
     def __init__(self, agent, io=None):
         super().__init__(agent, io)
 
@@ -52,6 +59,25 @@ class ContainerHandler(ResourceHandler):
 
     def check_resource(self, resource: Container):
         current = resource.clone()
+        containers = self._client.containers(all=True)
+
+        docker_resource = None
+        for container in containers:
+            names = container["Names"]
+            search_name = resource.name
+            if search_name[0] != "/":
+                search_name = "/" + search_name
+
+            if search_name in names:
+                docker_resource = container
+
+
+        if docker_resource is None:
+            current.state = "purged"
+        else:
+            data = self._client.inspect_container(docker_resource["Id"])
+            current.state = data["State"]["Status"]
+
         return current
 
     def do_changes(self, resource: Container) -> bool:
@@ -59,6 +85,24 @@ class ContainerHandler(ResourceHandler):
             Enforce the changes
         """
         changes = self.list_changes(resource)
+        changed = False
+
+        if "state" in changes:
+            state = changes["state"]
+            if state[0] == "purged" and state[1] == "running":
+                # ensure the image is pulled
+                images = self._client.images(name=resource.image)
+                if len(images) == 0:
+                    msg = self._client.pull(resource.image)
+                    if "not found" in msg:
+                        raise Exception("Failed to pull image %s: %s" % (resource.image, msg))
+
+                cont = self._client.create_container(image=resource.image, command=resource.command, detach=resource.detach,
+                                                     host_config={"memory_limit": resource.memory_limit})
+                self._client.start(cont["Id"])
+                self._client.rename(cont["Id"], resource.name)
+
+                changed = True
 
         return changed
 
