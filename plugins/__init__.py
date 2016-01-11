@@ -22,10 +22,49 @@ from impera.export import resource_to_id
 from impera.resources import Resource, resource, ResourceNotFoundExcpetion
 from impera import methods
 
-@resource("docker::Container", agent = "service.host.name", id_attribute = "name")
+from docker import Client
+
+
+@resource("docker::Container", agent="service.host.name", id_attribute="name")
 class Container(Resource):
     """
         This class represents a docker container
     """
-    fields = ("name", "enabled", "description", "admin_token", "url", "purged",
-              "admin_user", "admin_password", "admin_tenant", "auth_url")
+    fields = ("name", "image", "state", "detach", "memory_limit", "command", "entrypoint")
+
+
+@provider("docker::Container", name="docker")
+class ContainerHandler(ResourceHandler):
+    @classmethod
+    def is_available(self, io):
+        return True
+
+    def __init__(self, agent, io=None):
+        super().__init__(agent, io)
+
+        self._client = None
+
+    def pre(self, resource: Container):
+        self._client = Client(base_url="unix://var/run/docker.sock")
+
+    def post(self, resource: Container):
+        self._client.close()
+
+    def check_resource(self, resource: Container):
+        current = resource.clone()
+        return current
+
+    def do_changes(self, resource: Container) -> bool:
+        """
+            Enforce the changes
+        """
+        changes = self.list_changes(resource)
+
+        return changed
+
+    def facts(self, resource : Container):
+        """
+            Get facts about this resource
+        """
+        return {}
+
