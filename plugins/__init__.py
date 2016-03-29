@@ -43,7 +43,7 @@ class ContainerHandler(ResourceHandler):
         """
             List the changes that are required to the vm
         """
-        current = self.check_resource(resource)
+        container_id, current = self.check_resource(resource)
         return self._diff(current, resource)
 
     def __init__(self, agent, io=None):
@@ -84,7 +84,8 @@ class ContainerHandler(ResourceHandler):
         """
             Enforce the changes
         """
-        changes = self.list_changes(resource)
+        container_id, current = self.check_resource(resource)
+        changes = self._diff(current, resource)
         changed = False
 
         if "state" in changes:
@@ -103,6 +104,12 @@ class ContainerHandler(ResourceHandler):
                 self._client.rename(cont["Id"], resource.name)
 
                 changed = True
+                
+            elif state[1] == "purged":
+                if state[0] == "running":
+                    self._client.stop(container_id)
+
+                self._client.remove_container(container_id)
 
         return changed
 
