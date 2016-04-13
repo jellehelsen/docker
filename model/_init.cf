@@ -20,6 +20,7 @@ entity Service extends ip::services::Server:
     """
         A docker service
     """
+    ip::cidr bridge_ip="172.17.0.1/16"
 end
 
 typedef container_state as string matching self == "running" or self == "stopped" or self == "latest" or self == "purged"
@@ -72,9 +73,25 @@ end
 Container container [1] -- [0:] Volume volumes
 
 implementation docker for Service:
-    docker_pkg = std::Package(host=host, name="docker", state="installed")
-    std::Service(host=host, name="docker", state="running", onboot=true, requires=docker_pkg)
+    docker_pkg = std::Package(host=host, name="docker-engine", state="installed")
+    docker_config = std::ConfigFile(host=host, path="/etc/sysconfig/docker", requires=docker_pkg,
+                                    content=std::template("docker/docker-sysconfig.tmpl"))
+    std::Service(host=host, name="docker", state="running", onboot=true, requires=[docker_pkg, docker_config])
 end
 
 implement Service using docker
+
+entity Registry extends ip::services::Server:
+    """
+        Deploy a docker registry
+    """
+    
+end
+
+implementation dockerRegistry for Registry:
+    pkg = std::Package(host=host, name="docker-registry", state="latest")
+    std::Service(host=host, name="docker-registry", state="running", onboot=true)
+end
+
+implement Registry using dockerRegistry
 
