@@ -18,7 +18,6 @@
 
 from impera.agent.handler import provider, ResourceHandler
 from impera.execute.util import Unknown
-from impera.export import resource_to_id
 from impera.resources import Resource, resource, ResourceNotFoundExcpetion
 from impera import methods
 
@@ -104,7 +103,7 @@ class ContainerHandler(ResourceHandler):
                 self._client.rename(cont["Id"], resource.name)
 
                 changed = True
-                
+
             elif state[1] == "purged":
                 if state[0] == "running":
                     self._client.stop(container_id)
