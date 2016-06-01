@@ -1,5 +1,5 @@
 """
-    Copyright 2016 Impera
+    Copyright 2016 Inmanta
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 
-    Contact: bart@impera.io
+    Contact: code@inmanta.com
 """
 
-from impera.agent.handler import provider, ResourceHandler
-from impera.execute.util import Unknown
-from impera.resources import Resource, resource, ResourceNotFoundExcpetion
-from impera import methods
+from inmanta.agent.handler import provider, ResourceHandler
+from inmanta.execute.util import Unknown
+from inmanta.resources import Resource, resource, ResourceNotFoundExcpetion
+from inmanta import methods
 
 from docker import Client
 

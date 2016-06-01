@@ -1,7 +1,7 @@
 name: docker
 description: Module to manage docker based containers
-version: 0.1b1
+version: '0.1'
 license: Apache 2.0
 requires:
-    ip: git@git.inmanta.com:modules/ip, master
-
+- ip
+author: Inmanta <code@inmanta.com>
