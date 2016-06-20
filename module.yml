@@ -1,6 +1,6 @@
 name: docker
 description: Module to manage docker based containers
-version: '0.1'
+version: 0.2.dev1466424138
 license: Apache 2.0
 requires:
 - ip

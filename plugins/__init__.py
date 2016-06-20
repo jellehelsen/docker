@@ -73,11 +73,11 @@ class ContainerHandler(ResourceHandler):
 
         if docker_resource is None:
             current.state = "purged"
+            return None, current
         else:
             data = self._client.inspect_container(docker_resource["Id"])
             current.state = data["State"]["Status"]
-
-        return current
+            return docker_resource["Id"], current
 
     def do_changes(self, resource: Container) -> bool:
         """

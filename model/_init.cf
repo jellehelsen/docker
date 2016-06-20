@@ -75,7 +75,7 @@ end
 Container container [1] -- [0:] Volume volumes
 
 implementation docker for Service:
-    docker_pkg = std::Package(host=host, name="docker-engine", state="installed")
+    docker_pkg = std::Package(host=host, name="docker", state="installed")
     docker_config = std::ConfigFile(host=host, path="/etc/sysconfig/docker", requires=docker_pkg,
                                     content=std::template("docker/docker-sysconfig.tmpl"))
     std::Service(host=host, name="docker", state="running", onboot=true, requires=[docker_pkg, docker_config])
