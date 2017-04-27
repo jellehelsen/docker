@@ -1,5 +1,5 @@
 """
-    Copyright 2016 Inmanta
+    Copyright 2017 Inmanta
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -31,13 +31,13 @@ entity Container:
     """
         A docker container deployed on a container service
 
-        :param name The name of the docker container
-        :param image The image to base this container on
-        :param detach Detach this container when started?
-        :param state The state of the container
-        :param memory_limit RAM allocated to the container in human readable format ("128MB")
-        :param command The command to execute
-        :param entrypoint The entrypoint of the container
+        :param name: The name of the docker container
+        :param image: The image to base this container on
+        :param detach: Detach this container when started?
+        :param state: The state of the container
+        :param memory_limit: RAM allocated to the container in human readable format ("128MB")
+        :param command: The command to execute
+        :param entrypoint: The entrypoint of the container
     """
     string name
     string image

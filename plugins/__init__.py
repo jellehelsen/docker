@@ -1,5 +1,5 @@
 """
-    Copyright 2016 Inmanta
+    Copyright 2017 Inmanta
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -38,25 +38,17 @@ class ContainerHandler(ResourceHandler):
     def is_available(self, io):
         return True
 
-    def list_changes(self, resource: Container) -> dict:
-        """
-            List the changes that are required to the vm
-        """
-        container_id, current = self.check_resource(resource)
-        return self._diff(current, resource)
-
     def __init__(self, agent, io=None):
         super().__init__(agent, io)
-
         self._client = None
 
-    def pre(self, resource: Container):
+    def pre(self, ctx, resource: Container):
         self._client = Client(base_url="unix://var/run/docker.sock")
 
-    def post(self, resource: Container):
+    def post(self, ctx, resource: Container):
         self._client.close()
 
-    def check_resource(self, resource: Container):
+    def check_resource(self, ctx, resource: Container):
         current = resource.clone()
         containers = self._client.containers(all=True)
 
@@ -73,23 +65,20 @@ class ContainerHandler(ResourceHandler):
 
         if docker_resource is None:
             current.state = "purged"
-            return None, current
+            return current
         else:
             data = self._client.inspect_container(docker_resource["Id"])
             current.state = data["State"]["Status"]
-            return docker_resource["Id"], current
+            ctx.set("container_id", docker_resource["Id"])
+            return current
 
-    def do_changes(self, resource: Container) -> bool:
+    def do_changes(self, ctx, resource: Container, changes) -> bool:
         """
             Enforce the changes
         """
-        container_id, current = self.check_resource(resource)
-        changes = self._diff(current, resource)
-        changed = False
-
         if "state" in changes:
             state = changes["state"]
-            if state[0] == "purged" and state[1] == "running":
+            if state["current"] == "purged" and state["desired"] == "running":
                 # ensure the image is pulled
                 images = self._client.images(name=resource.image)
                 if len(images) == 0:
@@ -102,15 +91,16 @@ class ContainerHandler(ResourceHandler):
                 self._client.start(cont["Id"])
                 self._client.rename(cont["Id"], resource.name)
 
-                changed = True
+                ctx.set_created()
 
-            elif state[1] == "purged":
-                if state[0] == "running":
+            elif state["desired"] == "purged":
+                container_id = ctx.get("container_id")
+                if state["current"] == "running":
                     self._client.stop(container_id)
 
                 self._client.remove_container(container_id)
 
-        return changed
+                ctx.set_purged()
 
     def facts(self, resource : Container):
         """
