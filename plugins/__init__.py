@@ -19,7 +19,6 @@
 from inmanta.agent.handler import provider, ResourceHandler
 from inmanta.execute.util import Unknown
 from inmanta.resources import Resource, resource, ResourceNotFoundExcpetion
-from inmanta import methods
 
 from docker import Client
 
