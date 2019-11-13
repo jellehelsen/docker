@@ -1,5 +1,5 @@
 name: docker
 description: Module to manage docker based containers
-version: 0.4.1
+version: 0.4.2
 license: Apache 2.0
 author: Inmanta <code@inmanta.com>

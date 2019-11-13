@@ -48,9 +48,15 @@ entity Container:
     string entrypoint=""
 end
 
-implement Container using std::none
-
 Service service [1] -- [0:] Container containers
+
+implement Container using abc
+
+implementation abc for Container:
+    self.requires = [ self.service ]
+    self.provides = self.provides
+end
+
 
 entity Port:
     """
